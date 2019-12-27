@@ -2,13 +2,20 @@ const router = require('express').Router();
 let User = require('../models/users.model');
 
 router.route('/:page/:size').get((req, res) => {
+    let searchQ = req.query.search ? { "username": { "$regex": req.query.search, "$options": "i" } } : {}
     let perPage = req.params.size
         , page = Math.max(0, Number(req.params.page))
-    User.find().limit(Number(perPage))
+    User.find(searchQ)
+        .limit(Number(perPage))
         .skip(perPage * page)
-        .then(movies => res.json(movies))
+        .sort({
+            gender: req.query.gender,
+            dob: req.query.dob,
+        })
+        .then(users => res.json(users))
         .catch(err => res.status(400).json('Error: ' + err));
 });
+
 router.route('/size').get((req, res) => {
     User.count({}).then(count => res.json(count))
         .catch(err => res.status(401).json('Error: ' + err))

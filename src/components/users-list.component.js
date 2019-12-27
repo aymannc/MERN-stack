@@ -17,20 +17,22 @@ const Exercise = props => (
     </tr>
 )
 const Navigator = props => (
-    <li class="page-item"><Link class="page-link" to={"/" + props.page + "/" + props.size}>{props.page}</Link></li>
+    <li className="page-item"><Link className="page-link" to={"/" + props.page + "/" + props.size}>{props.page}</Link></li>
 )
 export default class MoviesList extends Component {
     constructor(props) {
         super(props);
         this.deleteExercise = this.deleteExercise.bind(this);
         this.onChangeSearch = this.onChangeSearch.bind(this);
+        this.onChangeSortby = this.onChangeSortby.bind(this);
         this.state = {
             search: '',
+            sortbyOptions: ['gender', 'dob'],
+            sortby: '',
             page: '',
             size: '',
             number: '',
             users: [],
-            originalList: []
         }
     }
     componentDidMount() {
@@ -38,10 +40,16 @@ export default class MoviesList extends Component {
             size: this.props.match.params.size,
             page: this.props.match.params.page,
         })
-        axios.get("http://localhost:5000/users/size").then((res) => this.setState({ number: Number(res.data) })
+        axios.get("http://localhost:5000/users/size").then((res) => {
+            console.log(res.data);
+            this.setState({ number: Number(res.data) })
+        }
         ).catch((err) => console.error(err))
-        axios.get("http://localhost:5000/users/" + this.props.match.params.page + "/" + this.props.match.params.size)
-            .then((res) => this.setState({ users: res.data, originalList: res.data })
+        axios.get("http://localhost:5000/users/" + this.props.match.params.page + "/"
+            + this.props.match.params.size)
+            .then((res) => {
+                console.log(res.data); this.setState({ users: res.data})
+            }
             ).catch((err) => console.error(err))
     }
     deleteExercise(id) {
@@ -50,7 +58,6 @@ export default class MoviesList extends Component {
                 console.log(res.data);
                 this.setState({
                     users: this.state.users.filter(el => el._id !== id),
-                    originalList: this.state.users.filter(el => el._id !== id)
                 })
             })
             .catch(err => console.error(err))
@@ -62,30 +69,64 @@ export default class MoviesList extends Component {
     }
     pagesList() {
         // for (let i = this.state.number, j=1; i > 0; i -= this.state.size, j++)
-            return <Navigator page={this.state.page} size={this.state.size} />
+        return <Navigator page={this.state.page} size={this.state.size} />
     }
     onChangeSearch(e) {
         let search = e.target.value.toLowerCase()
-        let displayedusers = this.state.originalList.filter((m) => m.username.toLowerCase().includes(search))
+        // let displayedusers = this.state.originalList.filter((m) => m.username.toLowerCase().includes(search))
+        // this.setState({
+        //     search: search,
+        //     users: displayedusers
+        // });
         this.setState({
             search: search,
-            users: displayedusers
         });
+        axios.get("http://localhost:5000/users/" + this.props.match.params.page + "/"
+            + this.props.match.params.size + '?search=' + search)
+            .then((res) => { console.log(res.data); this.setState({ users: res.data }) })
+            .catch((err) => console.error(err))
+    }
+    onChangeSortby(e) {
+        this.setState({ sortby: e.target.value })
+        console.log(e.target.value);
+        axios.get("http://localhost:5000/users/" + this.props.match.params.page + "/"
+            + this.props.match.params.size + '?search=' + this.state.search + '&' + e.target.value + '=1')
+            .then((res) => { console.log(res.data); this.setState({ users: res.data }) })
+            .catch((err) => console.error(err))
     }
     render() {
         return (
             <div>
                 <h3>Users list</h3>
-                <div className="form-group row float-right">
-                    <label className="mt-2">Search For: </label>
-                    <div className="col">
-                        <input type="text"
+                <div className="form-group row ">
+                    <div className="col-6">
+                        <label className="mt-2">Sort By: </label>
+                        <select ref="userInput"
                             required
                             className="form-control"
-                            placeholder="Title"
-                            value={this.state.search}
-                            onChange={this.onChangeSearch}>
-                        </input>
+                            value={this.state.sortby}
+                            onChange={this.onChangeSortby}>
+                            {
+                                this.state.sortbyOptions.map((o) =>
+                                    <option
+                                        key={o}
+                                        value={o}> {o}
+                                    </option>
+                                )
+                            }
+                        </select>
+                    </div>
+                    <div className="col-6">
+                        <label className="mt-2">Search For: </label>
+                        <div className="col">
+                            <input type="text"
+                                required
+                                className="form-control"
+                                placeholder="Title"
+                                value={this.state.search}
+                                onChange={this.onChangeSearch}>
+                            </input>
+                        </div>
                     </div>
                 </div>
                 <table className="table">
@@ -107,10 +148,10 @@ export default class MoviesList extends Component {
                 </table>
 
                 <nav aria-label="Page navigation example">
-                    <ul class="pagination">
+                    <ul className="pagination">
                         {this.pagesList()}
                     </ul></nav>
-            </div>
+            </div >
         )
     }
 }

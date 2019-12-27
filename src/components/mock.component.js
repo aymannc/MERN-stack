@@ -39,7 +39,7 @@ export default class mock extends React.Component {
                 throw new Error('Request failed.');
             })
             .then(data => {
-                data.results.map(u => {
+                data.results.map((u) => {
                     let user = {
                         username: u.login.username,
                         gender: u.gender,
@@ -49,11 +49,12 @@ export default class mock extends React.Component {
                         photo: u.picture.medium
                     }
                     axios.post('http://localhost:5000/users/', user)
-                    .then(res => {
-                        console.log(res.data)
-                    })
-                    console.log(user)
-                })
+                        .then(res => {
+                            console.log(res.data)
+                        }).catch(err => console.log(err))
+                    return user
+                }
+                )
             })
             .catch(error => {
                 console.log(error);

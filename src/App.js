@@ -13,7 +13,7 @@ function App() {
       <div className="container">
         <Navbar />
         <br />
-        <Route path="/" exact component={UsersList} />
+        {/* <Route path="/" exact component={UsersList} /> */}
         <Route path="/:page/:size" exact component={UsersList} />
         <Route path="/edit/:id" component={EditUser} />
         <Route path="/create" component={CreateUser} />
