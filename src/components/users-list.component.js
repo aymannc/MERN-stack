@@ -17,9 +17,9 @@ const Exercise = props => (
     </tr>
 )
 const Navigator = props => (
-    <li className="page-item"><Link className="page-link" to={"/" + props.page + "/" + props.size}>{props.page}</Link></li>
+    <li className="page-item"><a className="page-link" href={"/" + props.page + "/" + props.size}>{props.page}</a></li>
 )
-export default class MoviesList extends Component {
+export default class UsersList extends Component {
     constructor(props) {
         super(props);
         this.deleteExercise = this.deleteExercise.bind(this);
@@ -30,6 +30,7 @@ export default class MoviesList extends Component {
             sortbyOptions: ['gender', 'dob'],
             sortby: '',
             page: '',
+            pages: [],
             size: '',
             number: '',
             users: [],
@@ -40,17 +41,25 @@ export default class MoviesList extends Component {
             size: this.props.match.params.size,
             page: this.props.match.params.page,
         })
-        axios.get("http://localhost:5000/users/size").then((res) => {
-            console.log(res.data);
-            this.setState({ number: Number(res.data) })
-        }
-        ).catch((err) => console.error(err))
+        axios.get("http://localhost:5000/users/size")
+            .then((res) => {
+                this.setState({ number: Number(res.data) })
+                return Number(res.data)
+            })
+            .then(res => {
+                let array = []
+                for (let i = res, j = 0; i > 0; i -= this.props.match.params.size, j++)
+                    array.push(j)
+                this.setState({
+                    pages: array
+                })
+            }
+            )
+            .catch((err) => console.error(err))
         axios.get("http://localhost:5000/users/" + this.props.match.params.page + "/"
             + this.props.match.params.size)
-            .then((res) => {
-                console.log(res.data); this.setState({ users: res.data})
-            }
-            ).catch((err) => console.error(err))
+            .then((res) => this.setState({ users: res.data }))
+            .catch((err) => console.error(err))
     }
     deleteExercise(id) {
         axios.delete('http://localhost:5000/users/' + id)
@@ -66,10 +75,6 @@ export default class MoviesList extends Component {
         return this.state.users.map(currentexercise => {
             return <Exercise exercise={currentexercise} deleteExercise={this.deleteExercise} key={currentexercise._id} />;
         })
-    }
-    pagesList() {
-        // for (let i = this.state.number, j=1; i > 0; i -= this.state.size, j++)
-        return <Navigator page={this.state.page} size={this.state.size} />
     }
     onChangeSearch(e) {
         let search = e.target.value.toLowerCase()
@@ -149,7 +154,9 @@ export default class MoviesList extends Component {
 
                 <nav aria-label="Page navigation example">
                     <ul className="pagination">
-                        {this.pagesList()}
+                        {
+                            this.state.pages.map((e) => <Navigator page={e} size="10" key={e} />)
+                        }
                     </ul></nav>
             </div >
         )
